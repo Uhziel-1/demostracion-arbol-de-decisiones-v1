@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minería de Datos · Árboles de Decisión (Demostración Interactiva)</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" crossorigin="anonymous">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+</head>
+<body>
+
+  <!-- Encabezado Superior -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="header-title-block">
+        <h1>
+          <span>Árboles de Decisión</span>
+          <span class="badge">Demostración Interactiva</span>
+        </h1>
+        <p class="header-subtitle">Curso de Minería de Datos · Demostración práctica del algoritmo CART / ID3 y evaluación con Matriz de Confusión</p>
+      </div>
+      <div>
+        <span class="pill" style="background: rgba(42, 157, 143, 0.2); color: #2a9d8f; border: 1px solid rgba(42, 157, 143, 0.4);">
+          Atención al Detalle &middot; Sin Concesiones
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout-wrapper">
+    <!-- Navegación Lateral -->
+    <aside class="sidebar">
+      <div class="sidebar-title">Índice Demostrativo</div>
+      <nav class="sidebar-nav">
+        <a href="#s1" class="active"><span class="nav-num">01</span><span>Inferencia</span></a>
+        <a href="#s2"><span class="nav-num">02</span><span>Impureza (Gini/Entropía)</span></a>
+        <a href="#s3"><span class="nav-num">03</span><span>Mejor Pregunta</span></a>
+        <a href="#s4"><span class="nav-num">04</span><span>Construcción Paso a Paso</span></a>
+        <a href="#s5"><span class="nav-num">05</span><span>Umbral Continuo</span></a>
+        <a href="#s6"><span class="nav-num">06</span><span>Sobreajuste (Profundidad)</span></a>
+        <a href="#s7"><span class="nav-num">07</span><span>Matriz de Confusión</span></a>
+      </nav>
+    </aside>
+
+    <!-- Contenedor Principal de Módulos -->
+    <main class="main-content">
+
+      <!-- ==========================================
+           MÓDULO 01: INFERENCIA
+           ========================================== -->
+      <section id="s1" class="module-card">
+        <div class="module-header">
+          <div>
+            <div class="module-header-title">
+              <span class="module-index">01</span>
+              <h2 class="module-title">Inferencia: Clasificar un Caso Nuevo</h2>
+            </div>
+            <p class="module-desc">
+              Un árbol ya entrenado clasifica un nuevo registro evaluando preguntas binarias desde la raíz hasta llegar a una hoja. El recorrido descarta automáticamente los atributos que no aportan información para ese caso concreto.
+            </p>
+          </div>
+        </div>
+
+        <div class="module-grid two-cols">
+          <!-- Columna Izquierda: Controles e Historial -->
+          <div class="panel">
+            <div class="panel-title">Entrada de Atributos</div>
+            <div id="s1-form"></div>
+            <div class="btn-group" style="margin-top: 1rem;">
+              <button id="s1-run" class="primary">Ejecutar Clasificación</button>
+              <button id="s1-random">Valores Aleatorios</button>
+            </div>
+
+            <div style="margin-top: 1.4rem;">
+              <div class="panel-title">Rastro de Decisiones</div>
+              <ul id="s1-trace" class="trace-list"></ul>
+              <div id="s1-result" class="pred-box">
+                <p class="muted small">Haga clic en «Ejecutar Clasificación» para observar la ruta de evaluación.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Columna Derecha: Árbol Visual SVG -->
+          <div class="panel">
+            <div class="panel-title">
+              <span>Recorrido por el Árbol</span>
+              <div class="tree-toolbar">
+                <button id="s1-zoom-out" title="Alejar">&minus;</button>
+                <span id="s1-zoom-level" class="zoom-badge">100%</span>
+                <button id="s1-zoom-in" title="Acercar">+</button>
+                <button id="s1-zoom-reset" title="Restablecer">⟲</button>
+              </div>
+            </div>
+            <div id="s1-tree-container" class="tree-container">
+              <svg id="s1-tree" class="tree-svg"></svg>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+           MÓDULO 02: MEDIR LA IMPUREZA
+           ========================================== -->
+      <section id="s2" class="module-card">
+        <div class="module-header">
+          <div>
+            <div class="module-header-title">
+              <span class="module-index">02</span>
+              <h2 class="module-title">Medición de la Mezcla: Índice Gini y Entropía</h2>
+            </div>
+            <p class="module-desc">
+              Un nodo es <b>puro</b> cuando todos sus registros pertenecen a la misma clase (impureza = 0). Si las clases están equilibradas (50% / 50%), la mezcla es máxima. Las fórmulas matemáticas cuantifican exactamente este desorden.
+            </p>
+          </div>
+        </div>
+
+        <div class="module-grid two-cols">
+          <!-- Frasco y Manipulación -->
+          <div class="panel jar-container">
+            <div class="panel-title" style="width: 100%;">Muestra de Clases</div>
+            <div id="s2-jar" class="jar"></div>
+
+            <div class="jar-controls">
+              <div class="jar-control-card">
+                <span class="cdot" style="background: var(--c-yes);"></span>
+                <span>Sí:</span>
+                <span id="s2-yes" class="jar-counter mono">6</span>
+                <button data-k="yes" data-d="1">+</button>
+                <button data-k="yes" data-d="-1">&minus;</button>
+              </div>
+              <div class="jar-control-card">
+                <span class="cdot" style="background: var(--c-no);"></span>
+                <span>No:</span>
+                <span id="s2-no" class="jar-counter mono">4</span>
+                <button data-k="no" data-d="1">+</button>
+                <button data-k="no" data-d="-1">&minus;</button>
+              </div>
+            </div>
+
+            <div class="btn-group" style="width: 100%; justify-content: center;">
+              <button data-p="10,0">Puro (10 Sí, 0 No)</button>
+              <button data-p="5,5">Mezcla Máxima (5, 5)</button>
+              <button data-p="7,3">Sesgado (7, 3)</button>
+            </div>
+
+            <div style="width: 100%;">
+              <div class="formula-card mono" id="s2-f-gini"></div>
+              <div class="formula-card mono" id="s2-f-ent"></div>
+              <p id="s2-msg" class="small muted" style="margin-top: 0.5rem;"></p>
+            </div>
+          </div>
+
+          <!-- Curvas Teóricas -->
+          <div class="panel">
+            <div class="panel-title">
+              <span>Curvas Teóricas de Impureza</span>
+              <span class="mono small">
+                Gini: <b id="s2-gini" style="color: #38bdf8;">0.480</b> |
+                Entropía: <b id="s2-ent" style="color: #a855f7;">0.971</b>
+              </span>
+            </div>
+            <svg id="s2-plot" class="plot-svg"></svg>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+           MÓDULO 03: ELECCIÓN DE LA MEJOR PREGUNTA
+           ========================================== -->
+      <section id="s3" class="module-card">
+        <div class="module-header">
+          <div>
+            <div class="module-header-title">
+              <span class="module-index">03</span>
+              <h2 class="module-title">Elección de la Mejor Pregunta (Ganancia de Información)</h2>
+            </div>
+            <p class="module-desc">
+              El algoritmo evalúa todos los atributos disponibles. Divide los 14 registros de entrenamiento en subgrupos, calcula la impureza ponderada y selecciona el atributo que logra la mayor reducción de impureza.
+            </p>
+          </div>
+          <div class="btn-group" id="s3-crit">
+            <button data-c="gini" class="on">Criterio: Gini</button>
+            <button data-c="entropy">Criterio: Entropía</button>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.8rem;">
+          <div class="btn-group" id="s3-feats"></div>
+          <div class="btn-group">
+            <button id="s3-all" class="primary">Probar Todos Automáticamente</button>
+            <button id="s3-reset">Restablecer</button>
+          </div>
+        </div>
+
+        <!-- Escenario Interactivo de Reparto Físico -->
+        <div id="s3-stage" class="stage"></div>
+
+        <div class="module-grid two-cols">
+          <!-- Tabla de Datos Originales -->
+          <div class="panel">
+            <div class="panel-title">Tabla de Entrenamiento (14 Casos)</div>
+            <div class="table-container">
+              <table id="s3-table" class="data-table"></table>
+            </div>
+          </div>
+
+          <!-- Cálculos y Comparativa -->
+          <div class="panel">
+            <div class="panel-title">Cálculo de Impureza Ponderada y Ganancia</div>
+            <div id="s3-calc" class="calc-box"></div>
+
+            <div style="margin-top: 1.2rem;">
+              <div class="panel-title">Comparación de Candidatos</div>
+              <div id="s3-bars"></div>
+              <p id="s3-verdict" class="verdict" style="margin-top: 0.8rem;"></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+           MÓDULO 04: CONSTRUCCIÓN PASO A PASO
+           ========================================== -->
+      <section id="s4" class="module-card">
+        <div class="module-header">
+          <div>
+            <div class="module-header-title">
+              <span class="module-index">04</span>
+              <h2 class="module-title">Construcción Recursiva Paso a Paso</h2>
+            </div>
+            <p class="module-desc">
+              Observación paso a paso de cómo el árbol se expande recursivamente. En cada iteración, el nodo activo decide si se convierte en hoja (por pureza o agotamiento de atributos) o si se ramifica con el atributo ganador.
+            </p>
+          </div>
+          <div class="btn-group" id="s4-crit">
+            <button data-c="gini" class="on">Gini</button>
+            <button data-c="entropy">Entropía</button>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+          <span id="s4-count" class="mono muted">Paso 0 de 0</span>
+          <div class="btn-group">
+            <button id="s4-next" class="primary">Siguiente Paso &rarr;</button>
+            <button id="s4-all">Construir Completo</button>
+            <button id="s4-reset">Reiniciar</button>
+          </div>
+        </div>
+
+        <div class="module-grid two-cols">
+          <div class="panel">
+            <div class="panel-title">
+              <span>Estructura del Árbol en Crecimiento</span>
+              <div class="tree-toolbar">
+                <button id="s4-zoom-out" title="Alejar">&minus;</button>
+                <span id="s4-zoom-level" class="zoom-badge">100%</span>
+                <button id="s4-zoom-in" title="Acercar">+</button>
+                <button id="s4-zoom-reset" title="Restablecer">⟲</button>
+              </div>
+            </div>
+            <div id="s4-tree-container" class="tree-container">
+              <svg id="s4-tree" class="tree-svg"></svg>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-title">Detalle del Nodo Activo</div>
+            <div id="s4-info"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+           MÓDULO 05: ATRIBUTOS NUMÉRICOS Y UMBRALES
+           ========================================== -->
+      <section id="s5" class="module-card">
+        <div class="module-header">
+          <div>
+            <div class="module-header-title">
+              <span class="module-index">05</span>
+              <h2 class="module-title">Atributos Continuos: Búsqueda del Umbral Óptimo</h2>
+            </div>
+            <p class="module-desc">
+              Para variables cuantitativas continuas (como cantidad de enlaces o signos de exclamación), el algoritmo ordena los valores únicos y evalúa los puntos medios como cortes candidatos. El corte que minimiza el Gini ponderado es seleccionado.
+            </p>
+          </div>
+          <div class="btn-group" id="s5-feat">
+            <button data-f="Enlaces" class="on">Enlaces</button>
+            <button data-f="Exclamaciones">Exclamaciones</button>
+          </div>
+        </div>
+
+        <div class="module-grid two-cols">
+          <!-- Scatter con Línea de Umbral Móvil -->
+          <div class="panel">
+            <div class="panel-title">
+              <span>Espacio de Decisión (70 Correos de Entrenamiento)</span>
+              <span id="s5-thr" class="mono" style="color: #ffea00; font-weight: 700;">Enlaces &le; 3.5</span>
+            </div>
+            <svg id="s5-plot" class="plot-svg"></svg>
+            <div style="margin-top: 0.9rem;">
+              <input type="range" id="s5-slider" min="0" max="11" step="1" value="3">
+            </div>
+            <div style="margin-top: 0.75rem; display: flex; justify-content: space-between;">
+              <button id="s5-sweep" class="primary">Búsqueda Exhaustiva Automática</button>
+            </div>
+          </div>
+
+          <!-- Métricas y Curva de Búsqueda -->
+          <div class="panel">
+            <div class="panel-title">Perfil de Impureza vs. Umbral</div>
+            <svg id="s5-chart" class="plot-svg"></svg>
+
+            <div class="module-grid two-cols" style="margin-top: 1rem; gap: 0.8rem;">
+              <div id="s5-left" class="formula-card"></div>
+              <div id="s5-right" class="formula-card"></div>
+            </div>
+
+            <div id="s5-formula" class="calc-box mono" style="margin-top: 0.8rem;"></div>
+            <div id="s5-best" style="margin-top: 0.8rem;"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+           MÓDULO 06: PROFUNDIDAD Y SOBREAJUSTE
+           ========================================== -->
+      <section id="s6" class="module-card">
+        <div class="module-header">
+          <div>
+            <div class="module-header-title">
+              <span class="module-index">06</span>
+              <h2 class="module-title">Profundidad del Árbol y Sobreajuste (Overfitting)</h2>
+            </div>
+            <p class="module-desc">
+              Un árbol demasiado profundo memoriza el ruido del conjunto de entrenamiento logrando una exactitud cercana al 100%, pero disminuye su rendimiento sobre datos nuevos (prueba). La poda o el límite de profundidad evita este problema.
+            </p>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-bottom: 1.2rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div style="display: flex; align-items: center; gap: 1rem; flex: 1; min-width: 280px;">
+              <span style="font-weight: 700;">Profundidad Máxima: <b id="s6-d" class="mono" style="color: #60a5fa; font-size: 1.2rem;">1</b></span>
+              <input type="range" id="s6-depth" min="1" max="8" step="1" value="1" style="flex: 1;">
+            </div>
+            <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.86rem; cursor: pointer;">
+              <input type="checkbox" id="s6-test-toggle">
+              <span>Superponer 30 correos de prueba</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="module-grid two-cols">
+          <!-- Partición del Plano -->
+          <div class="panel">
+            <div class="panel-title">Partición del Espacio en Regiones</div>
+            <svg id="s6-plot" class="plot-svg"></svg>
+            <p id="s6-msg" class="small muted" style="margin-top: 0.8rem;"></p>
+          </div>
+
+          <!-- Curva Entrenamiento vs Prueba -->
+          <div class="panel">
+            <div class="panel-title">
+              <span>Exactitud: Entrenamiento vs. Prueba</span>
+              <span class="mono small">
+                Entrenamiento: <b id="s6-train" style="color: #3b82f6;">--</b> |
+                Prueba: <b id="s6-test" style="color: #10b981;">--</b> |
+                Hojas: <b id="s6-leaves">--</b>
+              </span>
+            </div>
+            <svg id="s6-chart" class="plot-svg"></svg>
+            <div class="formula-card" style="margin-top: 0.9rem;">
+              <span class="muted small">
+                <b>Comportamiento en profundidad &ge; 5:</b> A partir de esta profundidad, el algoritmo ramifica micro-regiones para aislar puntos individuales de ruido. Esto incrementa la exactitud sobre el entrenamiento, pero satura la estructura y degrada la capacidad de generalización sobre datos nuevos.
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Panel Completo de Ancho Total (100%) para la Estructura del Árbol -->
+        <div class="panel" style="margin-top: 1.4rem;">
+          <div class="panel-title">
+            <div>
+              <span>Estructura del Árbol Resultante</span>
+              <span class="mono small" style="margin-left: 0.8rem; color: #60a5fa;">
+                (Nodos totales: <b id="s6-node-count">--</b>)
+              </span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.7rem;">
+              <span class="small muted">Arrastra para desplazar · Rueda del ratón para zoom</span>
+              <div class="tree-toolbar">
+                <button id="s6-zoom-out" title="Alejar">&minus;</button>
+                <span id="s6-zoom-level" class="zoom-badge">100%</span>
+                <button id="s6-zoom-in" title="Acercar">+</button>
+                <button id="s6-zoom-reset" title="Ajustar y Centrar">⟲ Ajustar</button>
+              </div>
+            </div>
+          </div>
+          <div id="s6-tree-container" class="tree-container" style="height: 460px; min-height: 460px;">
+            <svg id="s6-tree" class="tree-svg"></svg>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+           MÓDULO 07: MATRIZ DE CONFUSIÓN Y EVALUACIÓN
+           ========================================== -->
+      <section id="s7" class="module-card">
+        <div class="module-header">
+          <div>
+            <div class="module-header-title">
+              <span class="module-index">07</span>
+              <h2 class="module-title">Evaluación Formal: Matriz de Confusión y Métricas Derivadas</h2>
+            </div>
+            <p class="module-desc">
+              Al aplicar el árbol entrenado a los 30 correos desconocidos del conjunto de prueba, cada predicción se coteja contra la realidad. La Matriz de Confusión desglosa los aciertos (VP, VN) y los tipos específicos de error (FP, FN), permitiendo calcular métricas críticas de desempeño.
+            </p>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <span class="small muted">Profundidad del Árbol: <b id="s7-current-depth" class="mono">3</b></span>
+            <input type="range" id="s7-depth-select" min="1" max="8" step="1" value="3" style="width: 100px;">
+          </div>
+        </div>
+
+        <!-- Botones de Acción -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; flex-wrap: wrap; gap: 0.8rem;">
+          <div class="btn-group">
+            <button id="s7-btn-animate" class="primary">Animar Clasificación del Lote (30 Correos)</button>
+            <button id="s7-btn-filter-all">Mostrar Todo sin Filtro</button>
+          </div>
+          <span class="small muted">Haga clic en cualquier celda de la matriz para aislar sus casos correspondientes.</span>
+        </div>
+
+        <div class="module-grid two-cols">
+          <!-- Columna Izquierda: Matriz de Confusión 2x2 -->
+          <div class="panel">
+            <div class="panel-title">Matriz de Confusión (2 &times; 2)</div>
+
+            <div class="matrix-grid" id="s7-matrix">
+              <!-- Fila 0: Cabecera Predicha -->
+              <div></div>
+              <div class="matrix-header">Predicho Spam</div>
+              <div class="matrix-header">Predicho Normal</div>
+              <div class="matrix-header">Total Real</div>
+
+              <!-- Fila 1: Real Spam -->
+              <div class="matrix-header" style="justify-content: flex-end; padding-right: 0.6rem;">Real Spam</div>
+              <div class="matrix-cell tp" data-cat="tp">
+                <div class="cell-title">Verdadero Positivo (VP)</div>
+                <div class="cell-val" id="s7-tp">0</div>
+                <div class="small muted">Spam detectado</div>
+              </div>
+              <div class="matrix-cell fn" data-cat="fn">
+                <div class="cell-title">Falso Negativo (FN)</div>
+                <div class="cell-val" id="s7-fn">0</div>
+                <div class="small muted">Spam no detectado</div>
+              </div>
+              <div class="matrix-total mono" id="s7-sum-real-pos">0</div>
+
+              <!-- Fila 2: Real Normal -->
+              <div class="matrix-header" style="justify-content: flex-end; padding-right: 0.6rem;">Real Normal</div>
+              <div class="matrix-cell fp" data-cat="fp">
+                <div class="cell-title">Falso Positivo (FP)</div>
+                <div class="cell-val" id="s7-fp">0</div>
+                <div class="small muted">Falsa alarma</div>
+              </div>
+              <div class="matrix-cell tn" data-cat="tn">
+                <div class="cell-title">Verdadero Negativo (VN)</div>
+                <div class="cell-val" id="s7-tn">0</div>
+                <div class="small muted">Normal acertado</div>
+              </div>
+              <div class="matrix-total mono" id="s7-sum-real-neg">0</div>
+
+              <!-- Fila 3: Totales Columnas -->
+              <div class="matrix-header">Total Pred.</div>
+              <div class="matrix-total mono" id="s7-sum-pred-pos">0</div>
+              <div class="matrix-total mono" id="s7-sum-pred-neg">0</div>
+              <div class="matrix-total mono" id="s7-sum-total" style="font-weight: 800; color: #ffffff;">30</div>
+            </div>
+
+            <!-- Diagnóstico de Errores -->
+            <div id="s7-diagnostic" class="verdict"></div>
+          </div>
+
+          <!-- Columna Derecha: Dispersión con Errores Destacados -->
+          <div class="panel">
+            <div class="panel-title">Distribución Espacial de la Prueba</div>
+            <svg id="s7-plot" class="plot-svg"></svg>
+            <p class="small muted" style="margin-top: 0.6rem;">
+              Los puntos con borde amarillo grueso señalan correos mal clasificados (errores de frontera o ruido).
+            </p>
+          </div>
+        </div>
+
+        <!-- Tarjetas de Métricas Derivadas -->
+        <div class="metrics-summary-grid">
+          <div class="metric-card">
+            <div class="metric-name">Exactitud (Accuracy)</div>
+            <div class="metric-val" id="s7-acc-val">--%</div>
+            <div class="metric-formula" id="s7-acc-calc">--</div>
+            <div class="small muted" style="margin-top: 0.4rem;">Porcentaje global de aciertos sobre el total.</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-name">Precisión (Precision)</div>
+            <div class="metric-val" id="s7-prec-val">--%</div>
+            <div class="metric-formula" id="s7-prec-calc">--</div>
+            <div class="small muted" style="margin-top: 0.4rem;">De los clasificados como Spam, ¿cuántos lo eran realmente?</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-name">Sensibilidad (Recall)</div>
+            <div class="metric-val" id="s7-rec-val">--%</div>
+            <div class="metric-formula" id="s7-rec-calc">--</div>
+            <div class="small muted" style="margin-top: 0.4rem;">De todo el Spam real, ¿cuánto logró detectar el árbol?</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-name">F1-Score</div>
+            <div class="metric-val" id="s7-f1-val">--</div>
+            <div class="metric-formula" id="s7-f1-calc">--</div>
+            <div class="small muted" style="margin-top: 0.4rem;">Media armónica balanceada entre Precisión y Sensibilidad.</div>
+          </div>
+        </div>
+
+        <!-- Tabla Detallada de Correos de Prueba -->
+        <div class="panel" style="margin-top: 1.2rem;">
+          <div class="panel-title">
+            <span>Inspección Individual de Casos de Prueba</span>
+            <span id="s7-filter-count" class="mono small muted"></span>
+          </div>
+          <div class="table-container">
+            <table id="s7-table" class="data-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Enlaces</th>
+                  <th>Exclamaciones</th>
+                  <th>Clase Real</th>
+                  <th>Predicción</th>
+                  <th>Resultado</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <footer class="app-footer">
+    <p>Minería de Datos · Demostración Interactiva de Algoritmos de Árboles de Decisión y Matriz de Confusión.</p>
+  </footer>
+
+  <!-- Scripts en Orden Estricto de Dependencia -->
+  <script src="js/anime.min.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/ml.js"></script>
+  <script src="js/treeview.js"></script>
+  <script src="js/scatter.js"></script>
+  <script src="js/sections/s1_usar.js"></script>
+  <script src="js/sections/s2_impureza.js"></script>
+  <script src="js/sections/s3_division.js"></script>
+  <script src="js/sections/s4_construir.js"></script>
+  <script src="js/sections/s5_umbral.js"></script>
+  <script src="js/sections/s6_profundidad.js"></script>
+  <script src="js/sections/s7_matriz.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
