@@ -80,10 +80,10 @@ function initS6() {
     const isDeep = d >= 5;
     const view = TreeView.render(treeSvg, t, ds, {
       compact: isDeep || s.leaves > 5,
-      nodeW: isDeep ? 136 : (s.leaves > 4 ? 150 : 180),
-      nodeH: isDeep ? 48 : (s.leaves > 4 ? 54 : 68),
-      gapX: isDeep ? 14 : 24,
-      gapY: isDeep ? 44 : 60
+      nodeW: isDeep ? 144 : (s.leaves > 4 ? 158 : 180),
+      nodeH: isDeep ? 66 : (s.leaves > 4 ? 70 : 78),
+      gapX: isDeep ? 18 : 26,
+      gapY: isDeep ? 54 : 66
     });
 
     // Inicializar o centrar Pan & Zoom con la nueva geometría

@@ -25,7 +25,13 @@ const TreeView = (() => {
       transform: `translate(${p.x - W0 / 2},${p.y})`, 'data-id': n.id,
     }, parent);
     const box = svgEl('rect', { class: 'box', width: W0, height: H0, rx: compact ? 9 : 12 }, g);
-    const cx = W0 / 2, y1 = compact ? 22 : 28, y2 = compact ? 37 : 49;
+    const cx = W0 / 2;
+    const bh = compact ? 5 : 6;
+    const bottomPad = compact ? 8 : 10;
+    const by = H0 - bh - bottomPad;
+    const y1 = compact ? 20 : 25;
+    const y2 = compact ? 38 : 47;
+
     if (st === 'pending') {
       svgText(g, cx, y1, '?', 't1');
       svgText(g, cx, y2, `n=${n.samples}`, 't2');
@@ -42,10 +48,10 @@ const TreeView = (() => {
       svgText(g, cx, y1, question(n), 't1');
       svgText(g, cx, y2, compact ? `n=${n.samples}` : `n=${n.samples} · ${critName} ${n.impurity.toFixed(3)}`, 't2');
     }
-    // barra de proporción de clases
-    const bw = W0 - 20, by = H0 - (compact ? 9 : 12), bh = compact ? 4 : 5.5;
-    let x = 10;
-    svgEl('rect', { x: 10, y: by, width: bw, height: bh, fill: '#1e293b', rx: 2.5 }, g);
+    // barra de proporción de clases en el fondo del nodo con espacio limpio
+    const bw = W0 - 24;
+    let x = 12;
+    svgEl('rect', { x: 12, y: by, width: bw, height: bh, fill: '#1e293b', rx: 2.5 }, g);
     ds.classes.forEach(k => {
       const w = n.samples ? (bw * n.counts[k]) / n.samples : 0;
       if (w > 0) svgEl('rect', { x, y: by, width: w, height: bh, fill: ds.colors[k] }, g);
@@ -59,11 +65,12 @@ const TreeView = (() => {
    */
   function render(svg, root, ds, opts = {}) {
     const compact = !!opts.compact;
-    // Dimensiones más amplias y legibles
-    const W0 = opts.nodeW || (compact ? 148 : 180);
-    const H0 = opts.nodeH || (compact ? 54 : 74);
+    // Dimensiones amplias y holgadas para evitar cualquier colisión entre texto y barras
+    const minH = compact ? 66 : 76;
+    const W0 = opts.nodeW || (compact ? 152 : 184);
+    const H0 = Math.max(opts.nodeH || (compact ? 66 : 78), minH);
     const gx = opts.gapX ?? (compact ? 22 : 32);
-    const gy = opts.gapY ?? (compact ? 52 : 70);
+    const gy = opts.gapY ?? (compact ? 56 : 72);
     const state = opts.state || (() => 'decided');
     const critName = opts.critName || 'Gini';
     svg.innerHTML = '';

@@ -16,9 +16,9 @@ function initS1() {
   const container = $('#s1-tree-container');
   let view = TreeView.render(svg, tree, ds, {
     nodeW: 176,
-    nodeH: 72,
+    nodeH: 78,
     gapX: 30,
-    gapY: 64
+    gapY: 70
   });
 
   const zoomCtrl = TreeView.enableZoomPan(container, svg, {
@@ -48,9 +48,9 @@ function initS1() {
     // Render manteniendo posición base
     view = TreeView.render(svg, tree, ds, {
       nodeW: 176,
-      nodeH: 72,
+      nodeH: 78,
       gapX: 30,
-      gapY: 64
+      gapY: 70
     });
 
     trace.innerHTML = '';

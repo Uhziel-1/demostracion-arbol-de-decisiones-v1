@@ -19,10 +19,10 @@ function initS4() {
     const view = TreeView.render(svg, tree, ds, {
       state: stateOf,
       critName: ML.CRIT_NAME[crit],
-      nodeW: 168,
-      nodeH: 68,
-      gapX: 28,
-      gapY: 62
+      nodeW: 176,
+      nodeH: 78,
+      gapX: 30,
+      gapY: 68
     });
 
     if (!zoomCtrl && container) {
