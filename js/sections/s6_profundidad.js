@@ -86,7 +86,7 @@ function initS6() {
       gapY: isDeep ? 44 : 60
     });
 
-    // Inicializar o resetear Pan & Zoom
+    // Inicializar o centrar Pan & Zoom con la nueva geometría
     if (!zoomCtrl) {
       zoomCtrl = TreeView.enableZoomPan(treeContainer, treeSvg, {
         onZoom: scale => {
@@ -94,24 +94,33 @@ function initS6() {
           if (zoomLabel) zoomLabel.textContent = `${Math.round(scale * 100)}%`;
         }
       });
+    } else {
+      zoomCtrl.reset(false);
     }
 
-    // Animar nodos nuevos cuando se incrementa la profundidad
+    // Animar nodos nuevos cuando se incrementa la profundidad (sin tocar transform de SVG)
     if (d > lastDepth) {
-      const newNodes = ML.bfs(t).filter(n => n.depth === d || (n.depth === d - 1 && !n.leaf));
+      const newNodes = ML.bfs(t).filter(n => n.depth >= d - 1);
       const newElements = newNodes.map(n => view.nodes.get(n.id)).filter(Boolean);
       if (newElements.length) {
         anime({
           targets: newElements,
-          scale: [0.65, 1],
           opacity: [0, 1],
-          duration: 480,
-          delay: anime.stagger(40),
-          easing: 'easeOutBack'
+          duration: 400,
+          delay: anime.stagger(30),
+          easing: 'easeOutQuad'
+        });
+        const boxes = newElements.map(el => el.querySelector('rect.box')).filter(Boolean);
+        anime({
+          targets: boxes,
+          stroke: ['#ffea00', '#60a5fa'],
+          strokeWidth: [3.5, 1.8],
+          duration: 700,
+          easing: 'easeOutQuad'
         });
       }
     } else {
-      anime({ targets: treeSvg, opacity: [0.35, 1], duration: 350, easing: 'easeOutQuad' });
+      anime({ targets: treeSvg, opacity: [0.4, 1], duration: 300, easing: 'easeOutQuad' });
     }
     lastDepth = d;
 
